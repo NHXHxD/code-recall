@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createProblem } from '@/lib/actions/problems';
 import { GRADE_LABELS } from '@/lib/scheduling/sm2';
 import type { Difficulty } from '@/types/database';
+import type { FetchLeetCodeResponse, LeetCodeProblemMetadata } from '@/types/leetcode';
 
 const COMMON_TOPICS = [
   'Array', 'String', 'Hash Table', 'Dynamic Programming', 'Math',
@@ -13,6 +14,8 @@ const COMMON_TOPICS = [
   'Two Pointers', 'Sliding Window', 'Stack', 'Heap', 'Linked List',
   'Recursion', 'Backtracking', 'BFS', 'DFS', 'Bit Manipulation',
 ];
+
+type FetchStatus = 'idle' | 'fetching' | 'success' | 'error';
 
 export default function AddProblemPage() {
   const router = useRouter();
@@ -27,18 +30,123 @@ export default function AddProblemPage() {
   const [customTopic, setCustomTopic] = useState('');
   const [initialConfidence, setInitialConfidence] = useState(3);
 
+  // Auto-fetch state
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>('idle');
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [autoFilled, setAutoFilled] = useState(false);
+  const lastFetchedSlug = useRef<string | null>(null);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * Extract slug from LeetCode URL
+   */
+  const extractSlug = (urlStr: string): string | null => {
+    const match = urlStr.match(
+      /(?:https?:\/\/)?(?:www\.)?leetcode\.com\/problems\/([a-z0-9-]+)/i
+    );
+    return match ? match[1].toLowerCase() : null;
+  };
+
+  /**
+   * Fetch problem metadata from LeetCode
+   */
+  const fetchProblemMetadata = useCallback(async (slug: string) => {
+    // Skip if already fetched this slug
+    if (slug === lastFetchedSlug.current) return;
+    
+    setFetchStatus('fetching');
+    setFetchError(null);
+    lastFetchedSlug.current = slug;
+
+    try {
+      const response = await fetch('/api/leetcode/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+
+      const result: FetchLeetCodeResponse = await response.json();
+
+      if (result.success) {
+        applyMetadata(result.data);
+        setFetchStatus('success');
+        setAutoFilled(true);
+      } else {
+        setFetchStatus('error');
+        setFetchError(result.error.message);
+        // Don't clear lastFetchedSlug so user can retry
+        lastFetchedSlug.current = null;
+      }
+    } catch {
+      setFetchStatus('error');
+      setFetchError('Failed to connect to server');
+      lastFetchedSlug.current = null;
+    }
+  }, []);
+
+  /**
+   * Apply fetched metadata to form
+   */
+  const applyMetadata = (data: LeetCodeProblemMetadata) => {
+    setTitle(data.title);
+    setDifficulty(data.difficulty);
+    setTopics(data.topics);
+  };
+
+  /**
+   * Handle URL input changes with debounced auto-fetch
+   */
   const handleUrlChange = (newUrl: string) => {
     setUrl(newUrl);
-    // Try to extract problem name from URL
-    const match = newUrl.match(/leetcode\.com\/problems\/([a-z0-9-]+)/i);
-    if (match && !title) {
-      // Convert slug to title case
-      const slug = match[1];
-      const titleFromSlug = slug
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      setTitle(titleFromSlug);
+    setError(null);
+
+    // Clear any pending debounce
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    const slug = extractSlug(newUrl);
+    
+    if (!slug) {
+      // Not a valid LeetCode URL, reset fetch state
+      if (fetchStatus !== 'idle') {
+        setFetchStatus('idle');
+        setFetchError(null);
+      }
+      return;
+    }
+
+    // Debounce the fetch (300ms)
+    debounceTimer.current = setTimeout(() => {
+      fetchProblemMetadata(slug);
+    }, 300);
+  };
+
+  /**
+   * Handle paste event for immediate fetch
+   */
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    const slug = extractSlug(pastedText);
+    
+    if (slug) {
+      // Clear debounce and fetch immediately
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+      // Small delay to let the input update
+      setTimeout(() => fetchProblemMetadata(slug), 50);
+    }
+  };
+
+  /**
+   * Manual retry button
+   */
+  const handleRetryFetch = () => {
+    const slug = extractSlug(url);
+    if (slug) {
+      lastFetchedSlug.current = null;
+      fetchProblemMetadata(slug);
     }
   };
 
@@ -74,7 +182,7 @@ export default function AddProblemPage() {
         difficulty,
         topics,
         url: url.trim() || undefined,
-        leetcode_id: extractLeetCodeId(url),
+        leetcode_id: extractSlug(url) || undefined,
         initial_confidence: initialConfidence,
       });
 
@@ -83,7 +191,7 @@ export default function AddProblemPage() {
       } else {
         setError(result.error || 'Failed to create problem');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
@@ -111,18 +219,65 @@ export default function AddProblemPage() {
         {/* LeetCode URL */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            LeetCode URL (optional)
+            LeetCode URL
           </label>
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => handleUrlChange(e.target.value)}
-            placeholder="https://leetcode.com/problems/two-sum/"
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-          />
-          <p className="mt-2 text-xs text-slate-500">
-            Paste a LeetCode URL to auto-fill the title
-          </p>
+          <div className="relative">
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              onPaste={handlePaste}
+              placeholder="https://leetcode.com/problems/two-sum/"
+              className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 pr-12"
+            />
+            {/* Status indicator */}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              {fetchStatus === 'fetching' && (
+                <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+              )}
+              {fetchStatus === 'success' && (
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {fetchStatus === 'error' && (
+                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              )}
+            </div>
+          </div>
+          
+          {/* Fetch status messages */}
+          {fetchStatus === 'success' && autoFilled && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-emerald-400">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Auto-filled from LeetCode
+            </div>
+          )}
+          
+          {fetchStatus === 'error' && fetchError && (
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-amber-400">
+                {fetchError}. You can enter details manually.
+              </span>
+              <button
+                type="button"
+                onClick={handleRetryFetch}
+                className="text-xs text-slate-400 hover:text-white underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          
+          {fetchStatus === 'idle' && (
+            <p className="mt-2 text-xs text-slate-500">
+              Paste a LeetCode URL to auto-fill problem details
+            </p>
+          )}
         </div>
 
         {/* Title */}
@@ -278,7 +433,7 @@ export default function AddProblemPage() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || fetchStatus === 'fetching'}
           className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white font-medium py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-lg"
         >
           {isSubmitting ? (
@@ -302,11 +457,6 @@ export default function AddProblemPage() {
       </form>
     </div>
   );
-}
-
-function extractLeetCodeId(url: string): string | undefined {
-  const match = url.match(/leetcode\.com\/problems\/([a-z0-9-]+)/i);
-  return match ? match[1] : undefined;
 }
 
 function getDifficultyStyle(difficulty: Difficulty): string {
@@ -341,4 +491,3 @@ function getGradeSelectedStyle(grade: number): string {
   };
   return styles[grade] || 'border-slate-500 bg-slate-500/20';
 }
-

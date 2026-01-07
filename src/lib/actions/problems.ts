@@ -227,11 +227,3 @@ export async function toggleSuspend(problemId: string, suspended: boolean): Prom
   }
 }
 
-/**
- * Extract LeetCode problem ID from URL
- */
-export function extractLeetCodeId(url: string): string | null {
-  const match = url.match(/leetcode\.com\/problems\/([a-z0-9-]+)/i);
-  return match ? match[1] : null;
-}
-

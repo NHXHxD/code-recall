@@ -38,6 +38,12 @@ export default async function DashboardLayout({
               Dashboard
             </Link>
             <Link 
+              href="/problems" 
+              className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+            >
+              Problems
+            </Link>
+            <Link 
               href="/review" 
               className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
             >

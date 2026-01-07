@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient, requireUser } from '@/lib/supabase/server';
 import { createInitialReviewState } from '@/lib/scheduling/sm2';
-import type { CreateProblemInput, Problem, ProblemWithDetails } from '@/types/database';
+import type { CreateProblemInput, Problem, ProblemWithDetails, ProblemWithReviewState } from '@/types/database';
 
 /**
  * Default notes template for new problems
@@ -82,6 +82,7 @@ export async function createProblem(input: CreateProblemInput): Promise<{ succes
     
     revalidatePath('/dashboard');
     revalidatePath('/review');
+    revalidatePath('/problems');
     
     return { success: true, problemId: problem.id };
   } catch (error) {
@@ -123,22 +124,29 @@ export async function getProblem(problemId: string): Promise<ProblemWithDetails 
 }
 
 /**
- * Get all problems for the current user
+ * Get all problems for the current user with review state
  */
-export async function getProblems(): Promise<Problem[]> {
+export async function getProblems(): Promise<ProblemWithReviewState[]> {
   try {
     const user = await requireUser();
     const supabase = await createClient();
     
     const { data, error } = await supabase
       .from('problems')
-      .select('*')
+      .select(`
+        *,
+        review_state (*)
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    return data || [];
+    return (data || []).map(p => ({
+      ...p,
+      review_state: p.review_state?.[0] || p.review_state || null,
+      notes: null,
+    })) as ProblemWithReviewState[];
   } catch (error) {
     console.error('Error fetching problems:', error);
     return [];
@@ -166,6 +174,7 @@ export async function updateProblem(
     
     revalidatePath(`/problems/${problemId}`);
     revalidatePath('/dashboard');
+    revalidatePath('/problems');
     
     return { success: true };
   } catch (error) {
@@ -192,6 +201,7 @@ export async function deleteProblem(problemId: string): Promise<{ success: boole
     
     revalidatePath('/dashboard');
     revalidatePath('/review');
+    revalidatePath('/problems');
     
     return { success: true };
   } catch (error) {
@@ -218,6 +228,7 @@ export async function toggleSuspend(problemId: string, suspended: boolean): Prom
     
     revalidatePath('/dashboard');
     revalidatePath('/review');
+    revalidatePath('/problems');
     revalidatePath(`/problems/${problemId}`);
     
     return { success: true };

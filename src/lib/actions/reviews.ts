@@ -217,14 +217,14 @@ export async function getUpcomingReviews(): Promise<UpcomingReview[]> {
 /**
  * Get review history for a problem
  */
-export async function getReviewHistory(problemId: string): Promise<{ reviewed_at: string; grade: number; outcome: string | null }[]> {
+export async function getReviewHistory(problemId: string): Promise<{ id: string; reviewed_at: string; grade: number; outcome: string | null }[]> {
   try {
     const user = await requireUser();
     const supabase = await createClient();
     
     const { data, error } = await supabase
       .from('review_log')
-      .select('reviewed_at, grade, outcome')
+      .select('id, reviewed_at, grade, outcome')
       .eq('problem_id', problemId)
       .eq('user_id', user.id)
       .order('reviewed_at', { ascending: false })
@@ -236,6 +236,33 @@ export async function getReviewHistory(problemId: string): Promise<{ reviewed_at
   } catch (error) {
     console.error('Error fetching review history:', error);
     return [];
+  }
+}
+
+/**
+ * Delete a single review log entry
+ */
+export async function deleteReviewLog(reviewId: string, problemId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await requireUser();
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from('review_log')
+      .delete()
+      .eq('id', reviewId)
+      .eq('user_id', user.id);
+    
+    if (error) throw error;
+    
+    revalidatePath('/dashboard');
+    revalidatePath('/review');
+    revalidatePath(`/problems/${problemId}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting review log:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete review' };
   }
 }
 

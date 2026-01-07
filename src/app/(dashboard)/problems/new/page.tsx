@@ -29,6 +29,8 @@ export default function AddProblemPage() {
   const [topics, setTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState('');
   const [initialConfidence, setInitialConfidence] = useState(3);
+  const [notesContent, setNotesContent] = useState('');
+  const [keyIdea, setKeyIdea] = useState('');
 
   // Auto-fetch state
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>('idle');
@@ -184,6 +186,8 @@ export default function AddProblemPage() {
         url: url.trim() || undefined,
         leetcode_id: extractSlug(url) || undefined,
         initial_confidence: initialConfidence,
+        notes_content: notesContent.trim() || undefined,
+        key_idea: keyIdea.trim() || undefined,
       });
 
       if (result.success && result.problemId) {
@@ -418,6 +422,44 @@ export default function AddProblemPage() {
           </p>
         </div>
 
+        {/* Notes Section */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
+          <label className="block text-sm font-medium text-slate-300 mb-3">
+            Notes <span className="text-slate-500 font-normal">(optional)</span>
+          </label>
+          <p className="text-xs text-slate-500 mb-4">
+            Add your notes now or leave blank to use the default template
+          </p>
+
+          {/* Key Idea */}
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-slate-400 mb-2">
+              Key Idea
+            </label>
+            <input
+              type="text"
+              value={keyIdea}
+              onChange={(e) => setKeyIdea(e.target.value)}
+              placeholder="One-line summary of the key insight..."
+              className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm"
+            />
+          </div>
+
+          {/* Notes Content */}
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-2">
+              Content
+            </label>
+            <textarea
+              value={notesContent}
+              onChange={(e) => setNotesContent(e.target.value)}
+              rows={10}
+              placeholder={`## Core Pattern\n\n## Trigger\n\n## Invariant / Key Idea\n\n## One-liner Plan\n\n## Common Traps\n\n## Complexity\n\n## Similar Problems`}
+              className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm font-mono resize-y"
+            />
+          </div>
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/30">
@@ -452,7 +494,7 @@ export default function AddProblemPage() {
         </button>
 
         <p className="text-center text-sm text-slate-500">
-          A notes template will be auto-created for this problem
+          {notesContent.trim() ? 'Your notes will be saved with this problem' : 'A notes template will be auto-created for this problem'}
         </p>
       </form>
     </div>

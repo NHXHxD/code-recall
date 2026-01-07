@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { getProblem } from '@/lib/actions/problems';
 import { getReviewHistory } from '@/lib/actions/reviews';
 import { ReviewForm } from '@/components/review-form';
+import { NotesEditor } from '@/components/notes-editor';
+import { ReviewHistory } from '@/components/review-history';
 import { format } from 'date-fns';
 
 interface Props {
@@ -104,18 +106,11 @@ export default async function ProblemPage({ params }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Notes Section */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Notes</h2>
-            {problem.notes?.key_idea && (
-              <span className="text-xs px-2 py-1 rounded bg-cyan-500/20 text-cyan-400">
-                Key: {problem.notes.key_idea}
-              </span>
-            )}
-          </div>
-          
-          <div className="prose prose-invert prose-sm max-w-none">
-            <NotesContent content={problem.notes?.content || ''} />
-          </div>
+          <NotesEditor
+            problemId={problem.id}
+            initialContent={problem.notes?.content || ''}
+            initialKeyIdea={problem.notes?.key_idea || null}
+          />
         </div>
 
         {/* Review Form Section */}
@@ -126,29 +121,7 @@ export default async function ProblemPage({ params }: Props) {
       </div>
 
       {/* Review History */}
-      {history.length > 0 && (
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Review History</h2>
-          <div className="space-y-2">
-            {history.map((entry, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0"
-              >
-                <span className="text-sm text-slate-400">
-                  {format(new Date(entry.reviewed_at), 'MMM d, yyyy h:mm a')}
-                </span>
-                <div className="flex items-center gap-3">
-                  {entry.outcome && (
-                    <OutcomeBadge outcome={entry.outcome} />
-                  )}
-                  <GradeBadge grade={entry.grade} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <ReviewHistory problemId={problem.id} history={history} />
     </div>
   );
 }
@@ -176,62 +149,4 @@ function InfoItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function GradeBadge({ grade }: { grade: number }) {
-  const colors: Record<number, string> = {
-    0: 'bg-red-500/20 text-red-400',
-    1: 'bg-orange-500/20 text-orange-400',
-    2: 'bg-yellow-500/20 text-yellow-400',
-    3: 'bg-lime-500/20 text-lime-400',
-    4: 'bg-green-500/20 text-green-400',
-    5: 'bg-emerald-500/20 text-emerald-400',
-  };
-
-  return (
-    <span className={`text-sm px-2 py-1 rounded ${colors[grade] || 'bg-slate-500/20 text-slate-400'}`}>
-      Grade: {grade}
-    </span>
-  );
-}
-
-function OutcomeBadge({ outcome }: { outcome: string }) {
-  const colors = {
-    solved: 'text-green-400',
-    partial: 'text-yellow-400',
-    failed: 'text-red-400',
-  };
-
-  return (
-    <span className={`text-sm ${colors[outcome as keyof typeof colors] || 'text-slate-400'}`}>
-      {outcome}
-    </span>
-  );
-}
-
-function NotesContent({ content }: { content: string }) {
-  // Simple markdown-like rendering for headers and lists
-  const lines = content.split('\n');
-  
-  return (
-    <div className="space-y-2 text-slate-300">
-      {lines.map((line, i) => {
-        if (line.startsWith('## ')) {
-          return (
-            <h3 key={i} className="text-base font-semibold text-white mt-4 first:mt-0">
-              {line.replace('## ', '')}
-            </h3>
-          );
-        }
-        if (line.startsWith('- ')) {
-          return (
-            <p key={i} className="pl-4 text-sm">• {line.replace('- ', '')}</p>
-          );
-        }
-        if (line.trim()) {
-          return <p key={i} className="text-sm">{line}</p>;
-        }
-        return null;
-      })}
-    </div>
-  );
-}
 

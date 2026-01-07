@@ -5,6 +5,7 @@ import { getReviewHistory } from '@/lib/actions/reviews';
 import { ReviewForm } from '@/components/review-form';
 import { NotesEditor } from '@/components/notes-editor';
 import { ReviewHistory } from '@/components/review-history';
+import { CountdownBadge } from '@/components/countdown-badge';
 import { format } from 'date-fns';
 
 interface Props {
@@ -21,8 +22,6 @@ export default async function ProblemPage({ params }: Props) {
   if (!problem) {
     notFound();
   }
-
-  const isDue = new Date(problem.review_state.due_at) <= new Date();
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -43,11 +42,8 @@ export default async function ProblemPage({ params }: Props) {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <DifficultyBadge difficulty={problem.difficulty} />
-              {isDue && (
-                <span className="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  Due Now
-                </span>
-              )}
+              {/* Live Countdown Badge */}
+              <CountdownBadge dueAt={problem.review_state.due_at} showLabel />
             </div>
             <h1 className="text-2xl font-bold text-white">{problem.title}</h1>
           </div>
@@ -148,5 +144,3 @@ function InfoItem({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-

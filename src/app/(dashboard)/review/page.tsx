@@ -1,10 +1,25 @@
 import Link from 'next/link';
 import { getDueToday } from '@/lib/actions/reviews';
 import { GRADE_LABELS } from '@/lib/scheduling/sm2';
-import { formatDistanceToNow } from 'date-fns';
+import { ReviewListClient } from '@/components/review-list-client';
 
 export default async function ReviewQueuePage() {
   const dueProblems = await getDueToday();
+
+  // Serialize problems for the client component
+  const serializedProblems = dueProblems.map((problem) => ({
+    id: problem.id,
+    title: problem.title,
+    difficulty: problem.difficulty,
+    topics: problem.topics,
+    url: problem.url,
+    review_state: {
+      due_at: problem.review_state.due_at,
+      reps: problem.review_state.reps,
+      last_grade: problem.review_state.last_grade,
+      last_review_at: problem.review_state.last_review_at,
+    },
+  }));
 
   return (
     <div className="space-y-6">
@@ -53,90 +68,11 @@ export default async function ReviewQueuePage() {
           </Link>
         </div>
       ) : (
-        /* Problem List */
-        <div className="space-y-3">
-          {dueProblems.map((problem, index) => (
-            <Link
-              key={problem.id}
-              href={`/problems/${problem.id}`}
-              className="block bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-xl p-5 transition-all group"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm text-slate-500 font-mono">#{index + 1}</span>
-                    <h3 className="text-lg font-medium text-white group-hover:text-emerald-400 transition-colors">
-                      {problem.title}
-                    </h3>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <DifficultyBadge difficulty={problem.difficulty} />
-                    
-                    {problem.topics.slice(0, 3).map((topic) => (
-                      <span
-                        key={topic}
-                        className="text-xs px-2 py-1 rounded bg-slate-700/50 text-slate-400"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                    
-                    {problem.topics.length > 3 && (
-                      <span className="text-xs text-slate-500">
-                        +{problem.topics.length - 3} more
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Review State Info */}
-                  <div className="flex items-center gap-4 mt-3 text-sm text-slate-500">
-                    {problem.review_state.last_grade !== null && (
-                      <span className="flex items-center gap-1">
-                        <span>Last:</span>
-                        <span className={getGradeColor(problem.review_state.last_grade)}>
-                          {GRADE_LABELS[problem.review_state.last_grade]?.label || problem.review_state.last_grade}
-                        </span>
-                      </span>
-                    )}
-                    
-                    <span>
-                      Rep #{problem.review_state.reps + 1}
-                    </span>
-                    
-                    {problem.review_state.last_review_at && (
-                      <span>
-                        Last reviewed {formatDistanceToNow(new Date(problem.review_state.last_review_at), { addSuffix: true })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {problem.url && (
-                    <span
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.open(problem.url!, '_blank');
-                      }}
-                      className="text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
-                    >
-                      LeetCode ↗
-                    </span>
-                  )}
-                  <svg 
-                    className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 transition-colors" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        /* Problem List with Live Countdown */
+        <ReviewListClient 
+          problems={serializedProblems} 
+          gradeLabels={GRADE_LABELS} 
+        />
       )}
 
       {/* Confidence Scale Legend */}
@@ -159,20 +95,6 @@ export default async function ReviewQueuePage() {
   );
 }
 
-function DifficultyBadge({ difficulty }: { difficulty: string }) {
-  const colors = {
-    Easy: 'bg-green-500/20 text-green-400 border-green-500/30',
-    Medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    Hard: 'bg-red-500/20 text-red-400 border-red-500/30',
-  };
-
-  return (
-    <span className={`text-xs px-2 py-1 rounded border ${colors[difficulty as keyof typeof colors] || colors.Medium}`}>
-      {difficulty}
-    </span>
-  );
-}
-
 function getGradeColor(grade: number): string {
   const colors: Record<number, string> = {
     0: 'text-red-400',
@@ -184,4 +106,3 @@ function getGradeColor(grade: number): string {
   };
   return colors[grade] || 'text-slate-400';
 }
-

@@ -4,7 +4,7 @@ import { GRADE_LABELS } from '@/lib/scheduling/sm2';
 import { ReviewListClient } from '@/components/review-list-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, CheckCircle, Plus } from 'lucide-react';
+import { Play, PartyPopper, Plus } from 'lucide-react';
 
 export default async function ReviewQueuePage() {
   const dueProblems = await getDueToday();
@@ -51,7 +51,7 @@ export default async function ReviewQueuePage() {
         <Card className="border-[var(--border)]">
           <CardContent className="py-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent)]/10">
-              <CheckCircle className="h-8 w-8 text-[var(--accent)]" />
+              <PartyPopper className="h-8 w-8 text-[var(--accent)]" />
             </div>
             <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2">All caught up!</h2>
             <p className="text-[var(--foreground-muted)] mb-6">No problems due for review right now.</p>

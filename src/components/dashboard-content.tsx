@@ -13,7 +13,7 @@ import {
   FolderOpen, 
   ChevronRight,
   Plus,
-  Sparkles
+  PartyPopper
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -133,7 +133,7 @@ export function DashboardContent({ stats, dueToday, upcoming }: DashboardContent
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.5 }}
                   >
-                    <Sparkles className="h-7 w-7 text-[var(--accent)]" />
+                    <PartyPopper className="h-7 w-7 text-[var(--accent)]" />
                   </motion.div>
                   <p className="font-medium text-[var(--foreground)]">All caught up!</p>
                   <p className="mt-1 text-sm text-[var(--foreground-muted)]">

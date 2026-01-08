@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import NextTopLoader from 'nextjs-toploader';
 import { getUser } from '@/lib/supabase/server';
@@ -6,10 +7,7 @@ import { signOut } from '@/lib/actions/auth';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NavLinks, MobileNavLinks } from '@/components/nav-links';
 import { Button } from '@/components/ui/button';
-import { 
-  LogOut,
-  Sparkles
-} from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 export default async function DashboardLayout({
   children,
@@ -41,9 +39,13 @@ export default async function DashboardLayout({
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-3 transition-opacity hover:opacity-80">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent)]">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Code Recall"
+              width={36}
+              height={36}
+              className="rounded-lg"
+            />
             <span className="text-lg font-semibold text-[var(--foreground)]">
               Code Recall
             </span>

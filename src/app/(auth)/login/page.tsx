@@ -46,7 +46,7 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
         >
           <motion.div 
-            className="mb-4 flex justify-center"
+            className="mb-5 flex justify-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
@@ -59,10 +59,10 @@ export default function LoginPage() {
               className="rounded-2xl"
             />
           </motion.div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
             Code Recall
           </h1>
-          <p className="mt-2 text-[var(--foreground-muted)]">
+          <p className="mt-3 text-sm text-[var(--foreground-muted)]">
             Master LeetCode through spaced repetition
           </p>
         </motion.div>
@@ -73,11 +73,11 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="mx-auto w-full max-w-sm border-[var(--border)] shadow-lg">
-            <CardContent className="flex flex-col items-center justify-center px-6 py-8">
-              <h2 className="mb-4 text-center text-xl font-semibold text-[var(--foreground)]">
+          <Card className="mx-auto w-full max-w-sm rounded-2xl border-[var(--border)] shadow-[0_4px_24px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.3)]">
+            <CardContent className="px-8 pb-8 pt-6">
+              <p className="mb-6 text-center text-sm font-medium text-[var(--foreground-muted)]">
                 Welcome back
-              </h2>
+              </p>
 
               {error && (
                 <motion.div 
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 loading={isLoading}
                 loadingText="Signing in..."
                 variant="outline"
-                className="w-full gap-3 border-[var(--border)] bg-[var(--card)] py-5 text-base text-[var(--foreground)] hover:bg-[var(--muted)]"
+                className="h-12 w-full gap-3 rounded-xl border-[var(--border-subtle)] bg-[var(--card)] text-base font-medium text-[var(--foreground)] shadow-sm transition-all hover:border-[var(--border)] hover:bg-[var(--muted)] hover:shadow-md active:scale-[0.98]"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -122,7 +122,7 @@ export default function LoginPage() {
 
         {/* Features */}
         <motion.div 
-          className="mt-8 grid grid-cols-3 gap-4 text-center"
+          className="mx-auto mt-6 grid max-w-sm grid-cols-3 gap-2 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
@@ -139,8 +139,8 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
             >
-              <feature.icon className="mx-auto mb-2 h-6 w-6 text-[var(--accent)]" />
-              <p className="text-xs text-[var(--foreground-muted)]">{feature.label}</p>
+              <feature.icon className="mx-auto mb-1.5 h-5 w-5 text-[var(--accent)]" />
+              <p className="text-xs font-medium text-[var(--foreground-muted)]">{feature.label}</p>
             </motion.div>
           ))}
         </motion.div>

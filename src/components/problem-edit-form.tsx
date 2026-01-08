@@ -2,7 +2,13 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { X, Loader2 } from 'lucide-react';
 import { updateProblem, deleteProblem, toggleSuspend } from '@/lib/actions/problems';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Card, CardContent } from './ui/card';
+import { cn } from '@/lib/utils';
 import type { Difficulty } from '@/types/database';
 
 interface ProblemEditFormProps {
@@ -108,28 +114,27 @@ export function ProblemEditForm({
   return (
     <div className="space-y-6">
       {error && (
-        <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
 
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground-muted)]">
           Title
         </label>
-        <input
+        <Input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/50"
           placeholder="Problem title"
         />
       </div>
 
       {/* Difficulty */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground-muted)]">
           Difficulty
         </label>
         <div className="flex gap-3">
@@ -138,15 +143,16 @@ export function ProblemEditForm({
               key={d}
               type="button"
               onClick={() => setDifficulty(d)}
-              className={`px-4 py-2 rounded-lg border transition-colors ${
+              className={cn(
+                "rounded-lg border px-4 py-2 transition-colors",
                 difficulty === d
                   ? d === 'Easy'
-                    ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                    ? 'border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400'
                     : d === 'Medium'
-                    ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400'
-                    : 'bg-red-500/20 border-red-500/50 text-red-400'
-                  : 'bg-slate-700/50 border-slate-600/50 text-slate-400 hover:border-slate-500'
-              }`}
+                    ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                    : 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400'
+                  : 'border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] hover:border-[var(--foreground-subtle)]'
+              )}
             >
               {d}
             </button>
@@ -156,144 +162,160 @@ export function ProblemEditForm({
 
       {/* Topics */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground-muted)]">
           Topics
         </label>
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="mb-3 flex flex-wrap gap-2">
           {topics.map((topic) => (
-            <span
+            <Badge
               key={topic}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm text-slate-300"
+              variant="secondary"
+              className="gap-1.5 pr-1.5"
             >
               {topic}
               <button
                 type="button"
                 onClick={() => handleRemoveTopic(topic)}
-                className="text-slate-400 hover:text-red-400 transition-colors"
+                className="rounded-full p-0.5 transition-colors hover:bg-red-500/20 hover:text-red-500"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="h-3 w-3" />
               </button>
-            </span>
+            </Badge>
           ))}
         </div>
         <div className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/50"
             placeholder="Add a topic..."
+            className="flex-1"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={handleAddTopic}
-            className="px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-300 hover:border-emerald-500/50 transition-colors"
           >
             Add
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* URL */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground-muted)]">
           LeetCode URL
         </label>
-        <input
+        <Input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/50"
           placeholder="https://leetcode.com/problems/..."
         />
       </div>
 
       {/* Suspend Toggle */}
-      <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
+      <div className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--muted)] p-4">
         <div>
-          <p className="text-sm font-medium text-slate-300">Pause Reviews</p>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-sm font-medium text-[var(--foreground)]">Pause Reviews</p>
+          <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">
             Temporarily stop this problem from appearing in review queue
           </p>
         </div>
         <button
           type="button"
           onClick={handleToggleSuspend}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            suspended ? 'bg-amber-500' : 'bg-slate-600'
-          }`}
+          className={cn(
+            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+            suspended ? 'bg-amber-500' : 'bg-[var(--border)]'
+          )}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            className={cn(
+              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
               suspended ? 'translate-x-6' : 'translate-x-1'
-            }`}
+            )}
           />
         </button>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
-        <button
+      <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setShowDeleteConfirm(true)}
-          className="px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+          className="text-red-500 hover:bg-red-500/10 hover:text-red-600"
         >
           Delete Problem
-        </button>
+        </Button>
         
         <div className="flex gap-3">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onCancel}
             disabled={isPending}
-            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             onClick={handleSave}
             disabled={isPending}
-            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
           >
-            {isPending ? 'Saving...' : 'Save Changes'}
-          </button>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-white mb-2">Delete Problem?</h3>
-            <p className="text-slate-400 mb-6">
-              This will permanently delete &quot;{title}&quot; and all its review history. This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isPending}
-                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isPending}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
-              >
-                {isPending ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <Card className="mx-4 w-full max-w-md border-[var(--border)]">
+            <CardContent className="pt-6">
+              <h3 className="mb-2 text-lg font-semibold text-[var(--foreground)]">Delete Problem?</h3>
+              <p className="mb-6 text-[var(--foreground-muted)]">
+                This will permanently delete &quot;{title}&quot; and all its review history. This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
   );
 }
-

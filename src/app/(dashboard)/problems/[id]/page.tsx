@@ -6,6 +6,9 @@ import { ReviewForm } from '@/components/review-form';
 import { NotesEditor } from '@/components/notes-editor';
 import { ReviewHistory } from '@/components/review-history';
 import { ProblemDetailClient } from '@/components/problem-detail-client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -39,24 +42,20 @@ export default async function ProblemPage({ params }: Props) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* Back Link */}
       <div className="flex items-center gap-4">
-        <Link
-          href="/problems"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          All Problems
+        <Link href="/problems">
+          <Button variant="ghost" size="sm" className="gap-2 text-[var(--foreground-muted)]">
+            <ChevronLeft className="h-4 w-4" />
+            All Problems
+          </Button>
         </Link>
-        <span className="text-slate-600">|</span>
-        <Link
-          href="/review"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm"
-        >
-          Review Queue
+        <span className="text-[var(--border)]">|</span>
+        <Link href="/review">
+          <Button variant="ghost" size="sm" className="text-[var(--foreground-muted)]">
+            Review Queue
+          </Button>
         </Link>
       </div>
 
@@ -64,21 +63,27 @@ export default async function ProblemPage({ params }: Props) {
       <ProblemDetailClient problem={problemData} />
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Notes Section */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <NotesEditor
-            problemId={problem.id}
-            initialContent={problem.notes?.content || ''}
-            initialKeyIdea={problem.notes?.key_idea || null}
-          />
-        </div>
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <NotesEditor
+              problemId={problem.id}
+              initialContent={problem.notes?.content || ''}
+              initialKeyIdea={problem.notes?.key_idea || null}
+            />
+          </CardContent>
+        </Card>
 
         {/* Review Form Section */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Log Review</h2>
-          <ReviewForm problemId={problem.id} />
-        </div>
+        <Card className="border-[var(--border)]">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold">Log Review</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ReviewForm problemId={problem.id} />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Review History */}

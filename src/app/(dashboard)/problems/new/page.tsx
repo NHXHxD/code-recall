@@ -3,8 +3,15 @@
 import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronLeft, Plus, Loader2, Check, AlertTriangle, Zap, X } from 'lucide-react';
 import { createProblem } from '@/lib/actions/problems';
 import { GRADE_LABELS } from '@/lib/scheduling/sm2';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { Difficulty } from '@/types/database';
 import type { FetchLeetCodeResponse, LeetCodeProblemMetadata } from '@/types/leetcode';
 
@@ -203,297 +210,298 @@ export default function AddProblemPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto max-w-2xl">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm mb-4"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Dashboard
+        <Link href="/dashboard">
+          <Button variant="ghost" size="sm" className="mb-4 gap-2 text-[var(--foreground-muted)]">
+            <ChevronLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
         </Link>
-        <h1 className="text-3xl font-bold text-white">Add New Problem</h1>
-        <p className="mt-1 text-slate-400">Track a LeetCode problem for spaced repetition</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Add New Problem</h1>
+        <p className="mt-1 text-[var(--foreground-muted)]">Track a LeetCode problem for spaced repetition</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* LeetCode URL */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            LeetCode URL
-          </label>
-          <div className="relative">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              onPaste={handlePaste}
-              placeholder="https://leetcode.com/problems/two-sum/"
-              className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 pr-12"
-            />
-            {/* Status indicator */}
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              {fetchStatus === 'fetching' && (
-                <div className="w-5 h-5 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-              )}
-              {fetchStatus === 'success' && (
-                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {fetchStatus === 'error' && (
-                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              )}
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
+              LeetCode URL
+            </label>
+            <div className="relative">
+              <Input
+                type="url"
+                value={url}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                onPaste={handlePaste}
+                placeholder="https://leetcode.com/problems/two-sum/"
+                className="pr-12"
+              />
+              {/* Status indicator */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {fetchStatus === 'fetching' && (
+                  <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+                )}
+                {fetchStatus === 'success' && (
+                  <Check className="h-5 w-5 text-[var(--accent)]" />
+                )}
+                {fetchStatus === 'error' && (
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                )}
+              </div>
             </div>
-          </div>
-          
-          {/* Fetch status messages */}
-          {fetchStatus === 'success' && autoFilled && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-emerald-400">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Auto-filled from LeetCode
-            </div>
-          )}
-          
-          {fetchStatus === 'error' && fetchError && (
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-amber-400">
-                {fetchError}. You can enter details manually.
-              </span>
-              <button
-                type="button"
-                onClick={handleRetryFetch}
-                className="text-xs text-slate-400 hover:text-white underline"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-          
-          {fetchStatus === 'idle' && (
-            <p className="mt-2 text-xs text-slate-500">
-              Paste a LeetCode URL to auto-fill problem details
-            </p>
-          )}
-        </div>
+            
+            {/* Fetch status messages */}
+            {fetchStatus === 'success' && autoFilled && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-[var(--accent)]">
+                <Zap className="h-3.5 w-3.5" />
+                Auto-filled from LeetCode
+              </div>
+            )}
+            
+            {fetchStatus === 'error' && fetchError && (
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs text-amber-600 dark:text-amber-400">
+                  {fetchError}. You can enter details manually.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRetryFetch}
+                  className="text-xs text-[var(--foreground-muted)] underline hover:text-[var(--foreground)]"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            
+            {fetchStatus === 'idle' && (
+              <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+                Paste a LeetCode URL to auto-fill problem details
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Title */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Problem Title <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Two Sum"
-            required
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-          />
-        </div>
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
+              Problem Title <span className="text-red-500">*</span>
+            </label>
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Two Sum"
+              required
+            />
+          </CardContent>
+        </Card>
 
         {/* Difficulty */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            Difficulty
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            {(['Easy', 'Medium', 'Hard'] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setDifficulty(d)}
-                className={`py-3 px-4 rounded-lg border transition-all font-medium ${
-                  difficulty === d
-                    ? getDifficultyStyle(d)
-                    : 'border-slate-600 hover:border-slate-500 bg-slate-700/30 text-slate-300'
-                }`}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Topics */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            Topics / Tags
-          </label>
-          
-          {/* Selected Topics */}
-          {topics.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {topics.map((topic) => (
-                <span
-                  key={topic}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 text-sm"
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <label className="mb-3 block text-sm font-medium text-[var(--foreground)]">
+              Difficulty
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {(['Easy', 'Medium', 'Hard'] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDifficulty(d)}
+                  className={cn(
+                    "rounded-lg border py-3 px-4 font-medium transition-all",
+                    difficulty === d
+                      ? getDifficultyStyle(d)
+                      : 'border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] hover:border-[var(--foreground-subtle)]'
+                  )}
                 >
-                  {topic}
-                  <button
-                    type="button"
-                    onClick={() => toggleTopic(topic)}
-                    className="hover:text-white"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
+                  {d}
+                </button>
               ))}
             </div>
-          )}
+          </CardContent>
+        </Card>
 
-          {/* Common Topics */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {COMMON_TOPICS.filter(t => !topics.includes(t)).slice(0, 12).map((topic) => (
-              <button
-                key={topic}
+        {/* Topics */}
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <label className="mb-3 block text-sm font-medium text-[var(--foreground)]">
+              Topics / Tags
+            </label>
+            
+            {/* Selected Topics */}
+            {topics.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {topics.map((topic) => (
+                  <Badge
+                    key={topic}
+                    variant="success"
+                    className="gap-1 pr-1.5"
+                  >
+                    {topic}
+                    <button
+                      type="button"
+                      onClick={() => toggleTopic(topic)}
+                      className="rounded-full p-0.5 hover:bg-white/20"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Common Topics */}
+            <div className="mb-4 flex flex-wrap gap-2">
+              {COMMON_TOPICS.filter(t => !topics.includes(t)).slice(0, 12).map((topic) => (
+                <button
+                  key={topic}
+                  type="button"
+                  onClick={() => toggleTopic(topic)}
+                  className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-sm text-[var(--foreground-muted)] transition-colors hover:border-[var(--foreground-subtle)] hover:text-[var(--foreground)]"
+                >
+                  + {topic}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Topic Input */}
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomTopic())}
+                placeholder="Add custom topic..."
+                className="flex-1"
+              />
+              <Button
                 type="button"
-                onClick={() => toggleTopic(topic)}
-                className="px-3 py-1 rounded-lg border border-slate-600 hover:border-slate-500 bg-slate-700/30 text-slate-400 hover:text-white text-sm transition-colors"
+                variant="outline"
+                onClick={addCustomTopic}
               >
-                + {topic}
-              </button>
-            ))}
-          </div>
-
-          {/* Custom Topic Input */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customTopic}
-              onChange={(e) => setCustomTopic(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomTopic())}
-              placeholder="Add custom topic..."
-              className="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm"
-            />
-            <button
-              type="button"
-              onClick={addCustomTopic}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors text-sm"
-            >
-              Add
-            </button>
-          </div>
-        </div>
+                Add
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Initial Confidence */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            Initial Confidence
-          </label>
-          <p className="text-xs text-slate-500 mb-4">
-            How confident are you with this problem right now?
-          </p>
-          
-          <div className="grid grid-cols-6 gap-2 mb-3">
-            {[0, 1, 2, 3, 4, 5].map((g) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => setInitialConfidence(g)}
-                className={`p-3 rounded-lg border transition-all ${
-                  initialConfidence === g
-                    ? getGradeSelectedStyle(g)
-                    : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
-                }`}
-              >
-                <span className={`text-lg font-bold ${initialConfidence === g ? 'text-white' : getGradeTextColor(g)}`}>
-                  {g}
-                </span>
-              </button>
-            ))}
-          </div>
-          
-          <p className="text-sm text-slate-400">
-            <span className={getGradeTextColor(initialConfidence)}>
-              {GRADE_LABELS[initialConfidence]?.label}
-            </span>
-            {' – '}
-            {GRADE_LABELS[initialConfidence]?.description}
-          </p>
-        </div>
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <label className="mb-3 block text-sm font-medium text-[var(--foreground)]">
+              Initial Confidence
+            </label>
+            <p className="mb-4 text-xs text-[var(--foreground-muted)]">
+              How confident are you with this problem right now?
+            </p>
+            
+            <div className="mb-3 grid grid-cols-6 gap-2">
+              {[0, 1, 2, 3, 4, 5].map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setInitialConfidence(g)}
+                  className={cn(
+                    "rounded-lg border p-3 transition-all",
+                    initialConfidence === g
+                      ? getGradeSelectedStyle(g)
+                      : 'border-[var(--border)] bg-[var(--card)] hover:border-[var(--foreground-subtle)]'
+                  )}
+                >
+                  <span className={cn(
+                    "text-lg font-bold",
+                    initialConfidence === g ? 'text-[var(--foreground)]' : getGradeTextColor(g)
+                  )}>
+                    {g}
+                  </span>
+                </button>
+              ))}
+            </div>
+            
+            <p className="text-sm text-[var(--foreground-muted)]">
+              <span className={getGradeTextColor(initialConfidence)}>
+                {GRADE_LABELS[initialConfidence]?.label}
+              </span>
+              {' – '}
+              {GRADE_LABELS[initialConfidence]?.description}
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Notes Section */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            Notes <span className="text-slate-500 font-normal">(optional)</span>
-          </label>
-          <p className="text-xs text-slate-500 mb-4">
-            Add your notes now or leave blank to use the default template
-          </p>
-
-          {/* Key Idea */}
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Key Idea
+        <Card className="border-[var(--border)]">
+          <CardContent className="pt-6">
+            <label className="mb-3 block text-sm font-medium text-[var(--foreground)]">
+              Notes <span className="font-normal text-[var(--foreground-muted)]">(optional)</span>
             </label>
-            <input
-              type="text"
-              value={keyIdea}
-              onChange={(e) => setKeyIdea(e.target.value)}
-              placeholder="One-line summary of the key insight..."
-              className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm"
-            />
-          </div>
+            <p className="mb-4 text-xs text-[var(--foreground-muted)]">
+              Add your notes now or leave blank to use the default template
+            </p>
 
-          {/* Notes Content */}
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
-              Content
-            </label>
-            <textarea
-              value={notesContent}
-              onChange={(e) => setNotesContent(e.target.value)}
-              rows={10}
-              placeholder={`## Core Pattern\n\n## Trigger\n\n## Invariant / Key Idea\n\n## One-liner Plan\n\n## Common Traps\n\n## Complexity\n\n## Similar Problems`}
-              className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm font-mono resize-y"
-            />
-          </div>
-        </div>
+            {/* Key Idea */}
+            <div className="mb-4">
+              <label className="mb-2 block text-xs font-medium text-[var(--foreground-muted)]">
+                Key Idea
+              </label>
+              <Input
+                type="text"
+                value={keyIdea}
+                onChange={(e) => setKeyIdea(e.target.value)}
+                placeholder="One-line summary of the key insight..."
+              />
+            </div>
+
+            {/* Notes Content */}
+            <div>
+              <label className="mb-2 block text-xs font-medium text-[var(--foreground-muted)]">
+                Content
+              </label>
+              <Textarea
+                value={notesContent}
+                onChange={(e) => setNotesContent(e.target.value)}
+                rows={10}
+                placeholder={`## Core Pattern\n\n## Trigger\n\n## Invariant / Key Idea\n\n## One-liner Plan\n\n## Common Traps\n\n## Complexity\n\n## Similar Problems`}
+                className="resize-y font-mono"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Error Message */}
         {error && (
-          <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/30">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span className="text-red-400">{error}</span>
-            </div>
+          <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+            <X className="h-5 w-5 text-red-500" />
+            <span className="text-red-600 dark:text-red-400">{error}</span>
           </div>
         )}
 
         {/* Submit Button */}
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="lg"
           disabled={isSubmitting || fetchStatus === 'fetching'}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white font-medium py-4 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-lg"
+          className="w-full gap-2 py-6 text-lg"
         >
           {isSubmitting ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
               Adding Problem...
             </>
           ) : (
             <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+              <Plus className="h-5 w-5" />
               Add Problem
             </>
           )}
-        </button>
+        </Button>
 
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-[var(--foreground-muted)]">
           {notesContent.trim() ? 'Your notes will be saved with this problem' : 'A notes template will be auto-created for this problem'}
         </p>
       </form>
@@ -503,33 +511,33 @@ export default function AddProblemPage() {
 
 function getDifficultyStyle(difficulty: Difficulty): string {
   const styles = {
-    Easy: 'border-green-500 bg-green-500/20 text-green-400',
-    Medium: 'border-yellow-500 bg-yellow-500/20 text-yellow-400',
-    Hard: 'border-red-500 bg-red-500/20 text-red-400',
+    Easy: 'border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400',
+    Medium: 'border-yellow-500/50 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+    Hard: 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400',
   };
   return styles[difficulty];
 }
 
 function getGradeTextColor(grade: number): string {
   const colors: Record<number, string> = {
-    0: 'text-red-400',
-    1: 'text-orange-400',
-    2: 'text-yellow-400',
-    3: 'text-lime-400',
-    4: 'text-green-400',
-    5: 'text-emerald-400',
+    0: 'text-red-500 dark:text-red-400',
+    1: 'text-orange-500 dark:text-orange-400',
+    2: 'text-yellow-500 dark:text-yellow-400',
+    3: 'text-lime-500 dark:text-lime-400',
+    4: 'text-green-500 dark:text-green-400',
+    5: 'text-emerald-500 dark:text-emerald-400',
   };
-  return colors[grade] || 'text-slate-400';
+  return colors[grade] || 'text-[var(--foreground-muted)]';
 }
 
 function getGradeSelectedStyle(grade: number): string {
   const styles: Record<number, string> = {
-    0: 'border-red-500 bg-red-500/20',
-    1: 'border-orange-500 bg-orange-500/20',
-    2: 'border-yellow-500 bg-yellow-500/20',
-    3: 'border-lime-500 bg-lime-500/20',
-    4: 'border-green-500 bg-green-500/20',
-    5: 'border-emerald-500 bg-emerald-500/20',
+    0: 'border-red-500/50 bg-red-500/10',
+    1: 'border-orange-500/50 bg-orange-500/10',
+    2: 'border-yellow-500/50 bg-yellow-500/10',
+    3: 'border-lime-500/50 bg-lime-500/10',
+    4: 'border-green-500/50 bg-green-500/10',
+    5: 'border-emerald-500/50 bg-emerald-500/10',
   };
-  return styles[grade] || 'border-slate-500 bg-slate-500/20';
+  return styles[grade] || 'border-[var(--border)] bg-[var(--muted)]';
 }

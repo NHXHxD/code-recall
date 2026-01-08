@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Check, Pencil, Loader2 } from 'lucide-react';
 import { updateNotes } from '@/lib/actions/notes';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 interface NotesEditorProps {
   problemId: string;
@@ -46,67 +51,65 @@ export function NotesEditor({ problemId, initialContent, initialKeyIdea }: Notes
       <div className="space-y-4">
         {/* Key Idea Input */}
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2">
+          <label className="mb-2 block text-sm font-medium text-[var(--foreground-muted)]">
             Key Idea
           </label>
-          <input
+          <Input
             type="text"
             value={keyIdea}
             onChange={(e) => setKeyIdea(e.target.value)}
             placeholder="One-line summary of the key insight..."
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm"
           />
         </div>
 
         {/* Content Textarea */}
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2">
+          <label className="mb-2 block text-sm font-medium text-[var(--foreground-muted)]">
             Notes Content
           </label>
-          <textarea
+          <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={16}
-            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 text-sm font-mono resize-y"
+            className="font-mono resize-y"
             placeholder="Write your notes here..."
           />
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-sm">
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
             {error}
           </div>
         )}
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <button
+          <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+            variant="primary"
+            className="gap-2"
           >
             {isSaving ? (
               <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="h-4 w-4" />
                 Save Notes
               </>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleCancel}
             disabled={isSaving}
-            className="text-slate-400 hover:text-white px-4 py-2 rounded-lg transition-colors text-sm"
+            variant="ghost"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -115,28 +118,28 @@ export function NotesEditor({ problemId, initialContent, initialKeyIdea }: Notes
   return (
     <div>
       {/* Header with Edit Button */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white">Notes</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Notes</h2>
         <div className="flex items-center gap-2">
           {initialKeyIdea && (
-            <span className="text-xs px-2 py-1 rounded bg-cyan-500/20 text-cyan-400">
+            <Badge variant="secondary" className="font-normal">
               Key: {initialKeyIdea}
-            </span>
+            </Badge>
           )}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-white px-2 py-1 rounded transition-colors text-sm"
+            className="gap-1.5"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <Pencil className="h-4 w-4" />
             Edit
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Notes Content Display */}
-      <div className="prose prose-invert prose-sm max-w-none">
+      <div className="prose prose-sm dark:prose-invert max-w-none">
         <NotesContentDisplay content={content} />
       </div>
     </div>
@@ -146,12 +149,20 @@ export function NotesEditor({ problemId, initialContent, initialKeyIdea }: Notes
 function NotesContentDisplay({ content }: { content: string }) {
   const lines = content.split('\n');
 
+  if (!content.trim()) {
+    return (
+      <p className="text-sm text-[var(--foreground-muted)] italic">
+        No notes yet. Click Edit to add some.
+      </p>
+    );
+  }
+
   return (
-    <div className="space-y-2 text-slate-300">
+    <div className="space-y-2 text-[var(--foreground-muted)]">
       {lines.map((line, i) => {
         if (line.startsWith('## ')) {
           return (
-            <h3 key={i} className="text-base font-semibold text-white mt-4 first:mt-0">
+            <h3 key={i} className="mt-4 text-base font-semibold text-[var(--foreground)] first:mt-0">
               {line.replace('## ', '')}
             </h3>
           );
@@ -169,4 +180,3 @@ function NotesContentDisplay({ content }: { content: string }) {
     </div>
   );
 }
-

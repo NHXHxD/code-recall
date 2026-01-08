@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CountdownBadgeProps {
   dueAt: string; // ISO 8601 UTC timestamp
@@ -58,11 +60,11 @@ function calculateCountdown(deltaMs: number): CountdownState {
 function getStatusClasses(status: CountdownStatus): string {
   switch (status) {
     case 'future':
-      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+      return 'bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20';
     case 'soon':
-      return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+      return 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400';
     case 'overdue':
-      return 'bg-red-500/20 text-red-400 border-red-500/30';
+      return 'bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400';
   }
 }
 
@@ -109,29 +111,13 @@ export function CountdownBadge({ dueAt, showLabel = false }: CountdownBadgeProps
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-mono ${statusClasses}`}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-mono",
+        statusClasses
+      )}
     >
-      <ClockIcon />
+      <Clock className="h-3.5 w-3.5" />
       {displayText}
     </span>
   );
 }
-
-function ClockIcon() {
-  return (
-    <svg
-      className="w-3.5 h-3.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  );
-}
-

@@ -75,7 +75,7 @@ export default function LoginPage() {
         >
           <Card className="mx-auto w-full max-w-sm rounded-2xl border-[var(--border)] shadow-[0_4px_24px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.3)]">
             <CardContent className="px-8 pb-8 pt-6">
-              <p className="mb-6 text-center text-sm font-medium text-[var(--foreground-muted)]">
+              <p className="mb-6 text-center text-lg font-medium text-[var(--foreground-muted)]">
                 Welcome back
               </p>
 

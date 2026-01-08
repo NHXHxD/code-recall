@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'motion/react';
-import { Sparkles, BarChart3, Brain, FileText } from 'lucide-react';
+import { BarChart3, Brain, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,12 +46,18 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
         >
           <motion.div 
-            className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--accent)]"
+            className="mx-auto mb-4"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
           >
-            <Sparkles className="h-8 w-8 text-white" />
+            <Image
+              src="/logo.png"
+              alt="Code Recall"
+              width={64}
+              height={64}
+              className="rounded-2xl"
+            />
           </motion.div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">
             Code Recall

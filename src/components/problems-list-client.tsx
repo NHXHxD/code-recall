@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { CountdownBadge } from './countdown-badge';
+import { deleteProblem } from '@/lib/actions/problems';
 
 interface ProblemItem {
   id: string;
@@ -32,10 +34,23 @@ function getDifficultyOrder(difficulty: string): number {
 }
 
 export function ProblemsListClient({ problems }: ProblemsListClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('created');
   const [showSuspended, setShowSuspended] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
+
+  const handleDelete = (problemId: string) => {
+    startTransition(async () => {
+      const result = await deleteProblem(problemId);
+      if (result.success) {
+        setDeleteConfirm(null);
+        router.refresh();
+      }
+    });
+  };
 
   // Filter and sort problems
   const filteredProblems = useMemo(() => {
@@ -218,30 +233,72 @@ export function ProblemsListClient({ problems }: ProblemsListClientProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  {problem.url && (
-                    <span
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.open(problem.url!, '_blank');
-                      }}
-                      className="text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-3">
+                    {problem.url && (
+                      <span
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.open(problem.url!, '_blank');
+                        }}
+                        className="text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        LeetCode ↗
+                      </span>
+                    )}
+                    <svg 
+                      className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 transition-colors" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
                     >
-                      LeetCode ↗
-                    </span>
-                  )}
-                  <svg 
-                    className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 transition-colors" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDeleteConfirm({ id: problem.id, title: problem.title });
+                    }}
+                    className="text-xs text-slate-500 hover:text-red-400 transition-colors"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                    Delete
+                  </button>
                 </div>
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-white mb-2">Delete Problem?</h3>
+            <p className="text-slate-400 mb-6">
+              This will permanently delete &quot;{deleteConfirm.title}&quot; and all its review history. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirm(null)}
+                disabled={isPending}
+                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(deleteConfirm.id)}
+                disabled={isPending}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+              >
+                {isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

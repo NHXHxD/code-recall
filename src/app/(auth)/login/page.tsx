@@ -73,9 +73,9 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="mx-auto max-w-xs border-[var(--border)] shadow-lg">
-            <CardContent className="p-6">
-              <h2 className="mb-4 text-center text-lg font-semibold text-[var(--foreground)]">
+          <Card className="mx-auto max-w-[280px] border-[var(--border)] shadow-lg">
+            <CardContent className="px-5 py-5">
+              <h2 className="mb-3 text-center text-base font-semibold text-[var(--foreground)]">
                 Welcome back
               </h2>
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 loading={isLoading}
                 loadingText="Signing in..."
                 variant="outline"
-                className="w-full gap-3 border-[var(--border)] bg-[var(--card)] py-5 text-[var(--foreground)] hover:bg-[var(--muted)]"
+                className="w-full gap-2 border-[var(--border)] bg-[var(--card)] py-4 text-sm text-[var(--foreground)] hover:bg-[var(--muted)]"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path

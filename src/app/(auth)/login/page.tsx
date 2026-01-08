@@ -73,15 +73,15 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="mx-auto max-w-[280px] border-[var(--border)] shadow-lg">
-            <CardContent className="px-5 py-5">
-              <h2 className="mb-3 text-center text-base font-semibold text-[var(--foreground)]">
+          <Card className="mx-auto w-full max-w-sm border-[var(--border)] shadow-lg">
+            <CardContent className="flex flex-col items-center justify-center px-6 py-8">
+              <h2 className="mb-4 text-center text-xl font-semibold text-[var(--foreground)]">
                 Welcome back
               </h2>
 
               {error && (
                 <motion.div 
-                  className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-600 dark:text-red-400"
+                  className="mb-4 w-full rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-600 dark:text-red-400"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 loading={isLoading}
                 loadingText="Signing in..."
                 variant="outline"
-                className="w-full gap-2 border-[var(--border)] bg-[var(--card)] py-4 text-sm text-[var(--foreground)] hover:bg-[var(--muted)]"
+                className="w-full gap-3 border-[var(--border)] bg-[var(--card)] py-5 text-base text-[var(--foreground)] hover:bg-[var(--muted)]"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path

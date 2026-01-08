@@ -120,6 +120,7 @@ export async function getDueToday(): Promise<ProblemWithDetails[]> {
 
 /**
  * Get dashboard statistics
+ * Optimized: Parallel queries instead of sequential
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
@@ -131,35 +132,43 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     const todayEnd = endOfDay(now);
     const weekEnd = endOfDay(addDays(now, 7));
     
-    // Get due today count
-    const { count: dueToday } = await supabase
-      .from('review_state')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('suspended', false)
-      .lte('due_at', todayEnd.toISOString());
-    
-    // Get due this week count
-    const { count: dueThisWeek } = await supabase
-      .from('review_state')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('suspended', false)
-      .lte('due_at', weekEnd.toISOString());
-    
-    // Get total problems count
-    const { count: totalProblems } = await supabase
-      .from('problems')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-    
-    // Get reviews completed today
-    const { count: reviewsToday } = await supabase
-      .from('review_log')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .gte('reviewed_at', todayStart.toISOString())
-      .lte('reviewed_at', todayEnd.toISOString());
+    // Run all count queries in parallel
+    const [
+      { count: dueToday },
+      { count: dueThisWeek },
+      { count: totalProblems },
+      { count: reviewsToday },
+    ] = await Promise.all([
+      // Due today count
+      supabase
+        .from('review_state')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('suspended', false)
+        .lte('due_at', todayEnd.toISOString()),
+      
+      // Due this week count
+      supabase
+        .from('review_state')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('suspended', false)
+        .lte('due_at', weekEnd.toISOString()),
+      
+      // Total problems count
+      supabase
+        .from('problems')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id),
+      
+      // Reviews completed today
+      supabase
+        .from('review_log')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('reviewed_at', todayStart.toISOString())
+        .lte('reviewed_at', todayEnd.toISOString()),
+    ]);
     
     return {
       due_today: dueToday || 0,
@@ -180,6 +189,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 /**
  * Get upcoming reviews for the next 7 days
+ * Optimized: Single query with JS grouping instead of 7 separate queries
  */
 export async function getUpcomingReviews(): Promise<UpcomingReview[]> {
   try {
@@ -187,23 +197,45 @@ export async function getUpcomingReviews(): Promise<UpcomingReview[]> {
     const supabase = await createClient();
     
     const now = new Date();
-    const days: UpcomingReview[] = [];
+    const todayStart = startOfDay(now);
+    const weekEnd = endOfDay(addDays(now, 6));
     
+    // Single query to fetch all reviews due in the next 7 days
+    const { data, error } = await supabase
+      .from('review_state')
+      .select('due_at')
+      .eq('user_id', user.id)
+      .eq('suspended', false)
+      .gte('due_at', todayStart.toISOString())
+      .lte('due_at', weekEnd.toISOString());
+    
+    if (error) throw error;
+    
+    // Group by day in JavaScript (fast, in-memory)
+    const countsByDay = new Map<string, number>();
+    
+    // Initialize all 7 days with 0
+    for (let i = 0; i < 7; i++) {
+      const dayKey = format(startOfDay(addDays(now, i)), 'yyyy-MM-dd');
+      countsByDay.set(dayKey, 0);
+    }
+    
+    // Count reviews per day
+    for (const item of data || []) {
+      const dayKey = format(startOfDay(new Date(item.due_at)), 'yyyy-MM-dd');
+      if (countsByDay.has(dayKey)) {
+        countsByDay.set(dayKey, (countsByDay.get(dayKey) || 0) + 1);
+      }
+    }
+    
+    // Build result array
+    const days: UpcomingReview[] = [];
     for (let i = 0; i < 7; i++) {
       const dayStart = startOfDay(addDays(now, i));
-      const dayEnd = endOfDay(addDays(now, i));
-      
-      const { count } = await supabase
-        .from('review_state')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('suspended', false)
-        .gte('due_at', dayStart.toISOString())
-        .lte('due_at', dayEnd.toISOString());
-      
+      const dayKey = format(dayStart, 'yyyy-MM-dd');
       days.push({
         date: format(dayStart, 'EEE, MMM d'),
-        count: count || 0,
+        count: countsByDay.get(dayKey) || 0,
       });
     }
     

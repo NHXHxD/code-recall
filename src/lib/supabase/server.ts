@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 
 /**
  * Get Supabase URL - checks multiple possible env var names
@@ -60,8 +61,12 @@ export async function createClient() {
 /**
  * Get the current authenticated user
  * Returns null if not authenticated
+ * 
+ * Wrapped with React cache() to deduplicate calls within the same request.
+ * When multiple server actions call getUser() in parallel (e.g., dashboard page),
+ * only one actual auth request is made.
  */
-export async function getUser() {
+export const getUser = cache(async () => {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,7 +75,7 @@ export async function getUser() {
     console.error('Error getting user:', error);
     return null;
   }
-}
+});
 
 /**
  * Get the current authenticated user or throw an error

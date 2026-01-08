@@ -2,8 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, Loader2 } from 'lucide-react';
 import { logReview } from '@/lib/actions/reviews';
 import { GRADE_LABELS } from '@/lib/scheduling/sm2';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 import type { Outcome } from '@/types/database';
 
 interface ReviewFormProps {
@@ -50,7 +55,7 @@ export function ReviewForm({ problemId }: ReviewFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Confidence Grade */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-3">
+        <label className="mb-3 block text-sm font-medium text-[var(--foreground)]">
           Confidence Level
         </label>
         <div className="grid grid-cols-6 gap-2">
@@ -59,19 +64,23 @@ export function ReviewForm({ problemId }: ReviewFormProps) {
               key={g}
               type="button"
               onClick={() => setGrade(g)}
-              className={`p-3 rounded-lg border transition-all ${
+              className={cn(
+                "rounded-lg border p-3 transition-all",
                 grade === g
                   ? getGradeSelectedStyle(g)
-                  : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
-              }`}
+                  : 'border-[var(--border)] bg-[var(--card)] hover:border-[var(--foreground-subtle)]'
+              )}
             >
-              <span className={`text-lg font-bold ${grade === g ? 'text-white' : getGradeTextColor(g)}`}>
+              <span className={cn(
+                "text-lg font-bold",
+                grade === g ? 'text-[var(--foreground)]' : getGradeTextColor(g)
+              )}>
                 {g}
               </span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-[var(--foreground-muted)]">
           <span className={getGradeTextColor(grade)}>{GRADE_LABELS[grade]?.label}</span>
           {' – '}
           {GRADE_LABELS[grade]?.description}
@@ -80,7 +89,7 @@ export function ReviewForm({ problemId }: ReviewFormProps) {
 
       {/* Outcome */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-3">
+        <label className="mb-3 block text-sm font-medium text-[var(--foreground)]">
           Outcome
         </label>
         <div className="grid grid-cols-3 gap-2">
@@ -89,11 +98,12 @@ export function ReviewForm({ problemId }: ReviewFormProps) {
               key={o}
               type="button"
               onClick={() => setOutcome(o)}
-              className={`py-2 px-4 rounded-lg border transition-all capitalize ${
+              className={cn(
+                "rounded-lg border py-2 px-4 capitalize transition-all",
                 outcome === o
                   ? getOutcomeStyle(o)
-                  : 'border-slate-600 hover:border-slate-500 bg-slate-700/30 text-slate-300'
-              }`}
+                  : 'border-[var(--border)] bg-[var(--card)] text-[var(--foreground-muted)] hover:border-[var(--foreground-subtle)]'
+              )}
             >
               {o}
             </button>
@@ -103,114 +113,107 @@ export function ReviewForm({ problemId }: ReviewFormProps) {
 
       {/* Time Spent */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
           Time Spent (minutes, optional)
         </label>
-        <input
+        <Input
           type="number"
           value={timeSpent}
           onChange={(e) => setTimeSpent(e.target.value)}
           placeholder="e.g., 25"
           min="1"
-          className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
         />
       </div>
 
       {/* Reflection */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
           Reflection (optional)
         </label>
-        <textarea
+        <Textarea
           value={reflection}
           onChange={(e) => setReflection(e.target.value)}
           placeholder="What did you learn? What tripped you up?"
           rows={3}
-          className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 resize-none"
+          className="resize-none"
         />
       </div>
 
       {/* Result Message */}
       {result && (
-        <div className={`p-4 rounded-lg ${
+        <div className={cn(
+          "rounded-lg border p-4",
           result.success 
-            ? 'bg-emerald-500/20 border border-emerald-500/30' 
-            : 'bg-red-500/20 border border-red-500/30'
-        }`}>
+            ? 'border-[var(--accent)]/20 bg-[var(--accent)]/10' 
+            : 'border-red-500/20 bg-red-500/10'
+        )}>
           {result.success ? (
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-emerald-400">
+              <Check className="h-5 w-5 text-[var(--accent)]" />
+              <span className="text-[var(--accent)]">
                 Review logged! Next review: <strong>{result.nextDue}</strong>
               </span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span className="text-red-400">{result.error}</span>
+              <span className="text-red-500 dark:text-red-400">{result.error}</span>
             </div>
           )}
         </div>
       )}
 
       {/* Submit Button */}
-      <button
+      <Button
         type="submit"
+        variant="primary"
         disabled={isSubmitting}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+        className="w-full gap-2"
       >
         {isSubmitting ? (
           <>
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <Loader2 className="h-5 w-5 animate-spin" />
             Logging...
           </>
         ) : (
           <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <Check className="h-5 w-5" />
             Log Review
           </>
         )}
-      </button>
+      </Button>
     </form>
   );
 }
 
 function getGradeTextColor(grade: number): string {
   const colors: Record<number, string> = {
-    0: 'text-red-400',
-    1: 'text-orange-400',
-    2: 'text-yellow-400',
-    3: 'text-lime-400',
-    4: 'text-green-400',
-    5: 'text-emerald-400',
+    0: 'text-red-500 dark:text-red-400',
+    1: 'text-orange-500 dark:text-orange-400',
+    2: 'text-yellow-500 dark:text-yellow-400',
+    3: 'text-lime-500 dark:text-lime-400',
+    4: 'text-green-500 dark:text-green-400',
+    5: 'text-emerald-500 dark:text-emerald-400',
   };
-  return colors[grade] || 'text-slate-400';
+  return colors[grade] || 'text-[var(--foreground-muted)]';
 }
 
 function getGradeSelectedStyle(grade: number): string {
   const styles: Record<number, string> = {
-    0: 'border-red-500 bg-red-500/20',
-    1: 'border-orange-500 bg-orange-500/20',
-    2: 'border-yellow-500 bg-yellow-500/20',
-    3: 'border-lime-500 bg-lime-500/20',
-    4: 'border-green-500 bg-green-500/20',
-    5: 'border-emerald-500 bg-emerald-500/20',
+    0: 'border-red-500/50 bg-red-500/10',
+    1: 'border-orange-500/50 bg-orange-500/10',
+    2: 'border-yellow-500/50 bg-yellow-500/10',
+    3: 'border-lime-500/50 bg-lime-500/10',
+    4: 'border-green-500/50 bg-green-500/10',
+    5: 'border-emerald-500/50 bg-emerald-500/10',
   };
-  return styles[grade] || 'border-slate-500 bg-slate-500/20';
+  return styles[grade] || 'border-[var(--border)] bg-[var(--muted)]';
 }
 
 function getOutcomeStyle(outcome: Outcome): string {
   const styles: Record<Outcome, string> = {
-    solved: 'border-green-500 bg-green-500/20 text-green-400',
-    partial: 'border-yellow-500 bg-yellow-500/20 text-yellow-400',
-    failed: 'border-red-500 bg-red-500/20 text-red-400',
+    solved: 'border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400',
+    partial: 'border-yellow-500/50 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+    failed: 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400',
   };
   return styles[outcome];
 }
-

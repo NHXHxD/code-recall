@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { ChevronRight, ExternalLink } from 'lucide-react';
 import { CountdownBadge } from './countdown-badge';
+import { DifficultyBadge } from './ui/difficulty-badge';
+import { Badge } from './ui/badge';
 
 interface ReviewProblem {
   id: string;
@@ -61,28 +64,14 @@ function sortProblemsByDue(problems: ReviewProblem[]): ReviewProblem[] {
 
 function getGradeColor(grade: number): string {
   const colors: Record<number, string> = {
-    0: 'text-red-400',
-    1: 'text-orange-400',
-    2: 'text-yellow-400',
-    3: 'text-lime-400',
-    4: 'text-green-400',
-    5: 'text-emerald-400',
+    0: 'text-red-500 dark:text-red-400',
+    1: 'text-orange-500 dark:text-orange-400',
+    2: 'text-yellow-500 dark:text-yellow-400',
+    3: 'text-lime-500 dark:text-lime-400',
+    4: 'text-green-500 dark:text-green-400',
+    5: 'text-emerald-500 dark:text-emerald-400',
   };
-  return colors[grade] || 'text-slate-400';
-}
-
-function DifficultyBadge({ difficulty }: { difficulty: string }) {
-  const colors = {
-    Easy: 'bg-green-500/20 text-green-400 border-green-500/30',
-    Medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    Hard: 'bg-red-500/20 text-red-400 border-red-500/30',
-  };
-
-  return (
-    <span className={`text-xs px-2 py-1 rounded border ${colors[difficulty as keyof typeof colors] || colors.Medium}`}>
-      {difficulty}
-    </span>
-  );
+  return colors[grade] || 'text-[var(--foreground-muted)]';
 }
 
 export function ReviewListClient({ problems, gradeLabels }: ReviewListClientProps) {
@@ -99,41 +88,38 @@ export function ReviewListClient({ problems, gradeLabels }: ReviewListClientProp
         <Link
           key={problem.id}
           href={`/problems/${problem.id}`}
-          className="block bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-xl p-5 transition-all group"
+          className="group block rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition-all hover:border-[var(--foreground-subtle)] hover:shadow-md"
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-sm text-slate-500 font-mono">#{index + 1}</span>
-                <h3 className="text-lg font-medium text-white group-hover:text-emerald-400 transition-colors">
+              <div className="mb-2 flex items-center gap-3">
+                <span className="font-mono text-sm text-[var(--foreground-muted)]">#{index + 1}</span>
+                <h3 className="text-lg font-medium text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)]">
                   {problem.title}
                 </h3>
               </div>
               
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <DifficultyBadge difficulty={problem.difficulty} />
                 
                 {/* Countdown Badge */}
                 <CountdownBadge dueAt={problem.review_state.due_at} />
                 
                 {problem.topics.slice(0, 3).map((topic) => (
-                  <span
-                    key={topic}
-                    className="text-xs px-2 py-1 rounded bg-slate-700/50 text-slate-400"
-                  >
+                  <Badge key={topic} variant="secondary" className="font-normal">
                     {topic}
-                  </span>
+                  </Badge>
                 ))}
                 
                 {problem.topics.length > 3 && (
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-[var(--foreground-subtle)]">
                     +{problem.topics.length - 3} more
                   </span>
                 )}
               </div>
 
               {/* Review State Info */}
-              <div className="flex items-center gap-4 mt-3 text-sm text-slate-500">
+              <div className="mt-3 flex items-center gap-4 text-sm text-[var(--foreground-muted)]">
                 {problem.review_state.last_grade !== null && (
                   <span className="flex items-center gap-1">
                     <span>Last:</span>
@@ -157,24 +143,18 @@ export function ReviewListClient({ problems, gradeLabels }: ReviewListClientProp
 
             <div className="flex items-center gap-3">
               {problem.url && (
-                <span
+                <button
                   onClick={(e) => {
                     e.preventDefault();
                     window.open(problem.url!, '_blank');
                   }}
-                  className="text-sm text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-sm text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
                 >
-                  LeetCode ↗
-                </span>
+                  LeetCode
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </button>
               )}
-              <svg 
-                className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 transition-colors" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="h-5 w-5 text-[var(--foreground-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--accent)]" />
             </div>
           </div>
         </Link>
@@ -182,4 +162,3 @@ export function ReviewListClient({ problems, gradeLabels }: ReviewListClientProp
     </div>
   );
 }
-

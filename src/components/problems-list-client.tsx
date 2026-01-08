@@ -286,9 +286,10 @@ export function ProblemsListClient({ problems }: ProblemsListClientProps) {
                   type="button"
                   variant="destructive"
                   onClick={() => handleDelete(deleteConfirm.id)}
-                  disabled={isPending}
+                  loading={isPending}
+                  loadingText="Deleting..."
                 >
-                  {isPending ? 'Deleting...' : 'Delete'}
+                  Delete
                 </Button>
               </div>
             </CardContent>

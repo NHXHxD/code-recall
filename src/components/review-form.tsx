@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Loader2 } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { logReview } from '@/lib/actions/reviews';
 import { GRADE_LABELS } from '@/lib/scheduling/sm2';
 import { Input } from './ui/input';
@@ -166,20 +166,12 @@ export function ReviewForm({ problemId }: ReviewFormProps) {
       <Button
         type="submit"
         variant="primary"
-        disabled={isSubmitting}
+        loading={isSubmitting}
+        loadingText="Logging..."
         className="w-full gap-2"
       >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Logging...
-          </>
-        ) : (
-          <>
-            <Check className="h-5 w-5" />
-            Log Review
-          </>
-        )}
+        <Check className="h-5 w-5" />
+        Log Review
       </Button>
     </form>
   );

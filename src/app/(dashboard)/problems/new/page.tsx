@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Loader2, Check, AlertTriangle, Zap, X } from 'lucide-react';
+// Note: Loader2 still needed for the URL fetch indicator
 import { createProblem } from '@/lib/actions/problems';
 import { GRADE_LABELS } from '@/lib/scheduling/sm2';
 import { Card, CardContent } from '@/components/ui/card';
@@ -485,20 +486,13 @@ export default function AddProblemPage() {
           type="submit"
           variant="primary"
           size="lg"
-          disabled={isSubmitting || fetchStatus === 'fetching'}
+          disabled={fetchStatus === 'fetching'}
+          loading={isSubmitting}
+          loadingText="Adding Problem..."
           className="w-full gap-2 py-6 text-lg"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Adding Problem...
-            </>
-          ) : (
-            <>
-              <Plus className="h-5 w-5" />
-              Add Problem
-            </>
-          )}
+          <Plus className="h-5 w-5" />
+          Add Problem
         </Button>
 
         <p className="text-center text-sm text-[var(--foreground-muted)]">

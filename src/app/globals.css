@@ -188,3 +188,10 @@ html.transitioning *::before,
 html.transitioning *::after {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
 }
+
+/* Clickable element feedback - for elements outside the Button component */
+button:not([data-slot="button"]):not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 150ms ease;
+}

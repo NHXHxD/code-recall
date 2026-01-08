@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { updateProblem, deleteProblem, toggleSuspend } from '@/lib/actions/problems';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -264,16 +264,10 @@ export function ProblemEditForm({
             type="button"
             variant="primary"
             onClick={handleSave}
-            disabled={isPending}
+            loading={isPending}
+            loadingText="Saving..."
           >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Changes'
-            )}
+            Save Changes
           </Button>
         </div>
       </div>
@@ -300,16 +294,10 @@ export function ProblemEditForm({
                   type="button"
                   variant="destructive"
                   onClick={handleDelete}
-                  disabled={isPending}
+                  loading={isPending}
+                  loadingText="Deleting..."
                 >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete'
-                  )}
+                  Delete
                 </Button>
               </div>
             </CardContent>

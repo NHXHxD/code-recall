@@ -56,26 +56,51 @@ export function DashboardContent({ stats, dueToday, upcoming }: DashboardContent
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { title: "Due Today", value: stats.due_today, icon: Clock, variant: stats.due_today > 0 ? "accent" : "default" as const },
-          { title: "This Week", value: stats.due_this_week, icon: Calendar, variant: "default" as const },
-          { title: "Reviews Today", value: stats.reviews_today, icon: CheckCircle, variant: "default" as const },
-          { title: "Total Problems", value: stats.total_problems, icon: FolderOpen, variant: "default" as const },
-        ].map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-          >
-            <StatsCard
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              variant={stat.variant}
-            />
-          </motion.div>
-        ))}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0 }}
+        >
+          <StatsCard
+            title="Due Today"
+            value={stats.due_today}
+            icon={Clock}
+            variant={stats.due_today > 0 ? "accent" : "default"}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <StatsCard
+            title="This Week"
+            value={stats.due_this_week}
+            icon={Calendar}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <StatsCard
+            title="Reviews Today"
+            value={stats.reviews_today}
+            icon={CheckCircle}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <StatsCard
+            title="Total Problems"
+            value={stats.total_problems}
+            icon={FolderOpen}
+          />
+        </motion.div>
       </div>
 
       {/* Main Content Grid */}

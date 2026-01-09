@@ -20,7 +20,8 @@ interface ProblemData {
   review_state: {
     due_at: string;
     reps: number;
-    ease: number;
+    difficulty: number;  // FSRS difficulty (1-10)
+    stability: number;   // FSRS stability in days
     interval_days: number;
     suspended: boolean;
   };
@@ -120,8 +121,8 @@ export function ProblemDetailClient({ problem }: ProblemDetailClientProps) {
             value={`#${problem.review_state.reps + 1}`}
           />
           <InfoItem
-            label="Ease Factor"
-            value={problem.review_state.ease.toFixed(2)}
+            label="Stability"
+            value={`${problem.review_state.stability.toFixed(1)}d`}
           />
           <InfoItem
             label="Interval"

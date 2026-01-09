@@ -35,7 +35,8 @@ export default async function ProblemPage({ params }: Props) {
     review_state: {
       due_at: problem.review_state.due_at,
       reps: problem.review_state.reps,
-      ease: problem.review_state.ease,
+      difficulty: problem.review_state.difficulty,
+      stability: problem.review_state.stability,
       interval_days: problem.review_state.interval_days,
       suspended: problem.review_state.suspended,
     },

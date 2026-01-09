@@ -50,7 +50,7 @@ export async function createProblem(input: CreateProblemInput): Promise<{ succes
     
     if (problemError) throw problemError;
     
-    // Insert review state
+    // Insert review state with FSRS parameters
     const { error: stateError } = await supabase
       .from('review_state')
       .insert({
@@ -58,8 +58,10 @@ export async function createProblem(input: CreateProblemInput): Promise<{ succes
         user_id: user.id,
         due_at: initialState.due_at.toISOString(),
         interval_days: initialState.interval_days,
-        ease: initialState.ease,
+        difficulty: initialState.difficulty,
+        stability: initialState.stability,
         reps: initialState.reps,
+        lapses: initialState.lapses,
         last_review_at: initialState.last_review_at.toISOString(),
         last_grade: initialState.last_grade,
         suspended: false,

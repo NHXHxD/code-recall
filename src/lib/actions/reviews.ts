@@ -25,27 +25,31 @@ export async function logReview(input: LogReviewInput): Promise<{ success: boole
     
     if (fetchError) throw fetchError;
     
-    // Calculate new review state
+    // Calculate new review state using FSRS algorithm
     const newState = calculateNextReview(
       {
         due_at: new Date(currentState.due_at),
         interval_days: currentState.interval_days,
-        ease: currentState.ease,
+        difficulty: currentState.difficulty,
+        stability: currentState.stability,
         reps: currentState.reps,
+        lapses: currentState.lapses,
         last_review_at: currentState.last_review_at ? new Date(currentState.last_review_at) : null,
         last_grade: currentState.last_grade,
       },
       input.grade
     );
     
-    // Update review state
+    // Update review state with new FSRS values
     const { error: updateError } = await supabase
       .from('review_state')
       .update({
         due_at: newState.due_at.toISOString(),
         interval_days: newState.interval_days,
-        ease: newState.ease,
+        difficulty: newState.difficulty,
+        stability: newState.stability,
         reps: newState.reps,
+        lapses: newState.lapses,
         last_review_at: newState.last_review_at.toISOString(),
         last_grade: newState.last_grade,
       })

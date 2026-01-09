@@ -37,8 +37,10 @@ export interface ReviewState {
   user_id: string;
   due_at: string;
   interval_days: number;
-  ease: number;
+  difficulty: number;  // FSRS difficulty (1-10 scale, lower = easier)
+  stability: number;   // FSRS stability in days
   reps: number;
+  lapses: number;      // Count of "Again" ratings (failures)
   last_review_at: string | null;
   last_grade: number | null;
   suspended: boolean;

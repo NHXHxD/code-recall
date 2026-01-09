@@ -20,8 +20,8 @@ interface ProblemData {
   review_state: {
     due_at: string;
     reps: number;
-    difficulty: number;  // FSRS difficulty (1-10)
-    stability: number;   // FSRS stability in days
+    difficulty?: number;  // FSRS difficulty (1-10), may be undefined for old data
+    stability?: number;   // FSRS stability in days, may be undefined for old data
     interval_days: number;
     suspended: boolean;
   };
@@ -122,7 +122,7 @@ export function ProblemDetailClient({ problem }: ProblemDetailClientProps) {
           />
           <InfoItem
             label="Stability"
-            value={`${problem.review_state.stability.toFixed(1)}d`}
+            value={`${(problem.review_state.stability ?? problem.review_state.interval_days).toFixed(1)}d`}
           />
           <InfoItem
             label="Interval"

@@ -25,15 +25,21 @@ export async function logReview(input: LogReviewInput): Promise<{ success: boole
     
     if (fetchError) throw fetchError;
     
+    // Backward compatibility: migrate from SM-2 ease to FSRS difficulty/stability if needed
+    // If difficulty/stability don't exist, compute them from ease using migration formula
+    const difficulty = currentState.difficulty ?? Math.max(1, Math.min(10, 11 - (currentState.ease ?? 2.5) * 4));
+    const stability = currentState.stability ?? Math.max(0.1, currentState.interval_days);
+    const lapses = currentState.lapses ?? 0;
+    
     // Calculate new review state using FSRS algorithm
     const newState = calculateNextReview(
       {
         due_at: new Date(currentState.due_at),
         interval_days: currentState.interval_days,
-        difficulty: currentState.difficulty,
-        stability: currentState.stability,
+        difficulty,
+        stability,
         reps: currentState.reps,
-        lapses: currentState.lapses,
+        lapses,
         last_review_at: currentState.last_review_at ? new Date(currentState.last_review_at) : null,
         last_grade: currentState.last_grade,
       },

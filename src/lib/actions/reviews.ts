@@ -84,6 +84,7 @@ export async function logReview(input: LogReviewInput): Promise<{ success: boole
 
 /**
  * Get problems due for review today
+ * Uses two-step query to ensure reliable filtering on review_state
  */
 export async function getDueToday(): Promise<ProblemWithDetails[]> {
   try {
@@ -93,25 +94,49 @@ export async function getDueToday(): Promise<ProblemWithDetails[]> {
     const now = new Date();
     const endOfToday = endOfDay(now);
     
+    // Step 1: Get due problem IDs from review_state directly (reliable filtering)
+    const { data: dueStates, error: stateError } = await supabase
+      .from('review_state')
+      .select('problem_id, due_at')
+      .eq('user_id', user.id)
+      .eq('suspended', false)
+      .lte('due_at', endOfToday.toISOString())
+      .order('due_at', { ascending: true });
+    
+    if (stateError) throw stateError;
+    if (!dueStates || dueStates.length === 0) return [];
+    
+    const problemIds = dueStates.map(s => s.problem_id);
+    
+    // Step 2: Fetch full problem details for those IDs
     const { data, error } = await supabase
       .from('problems')
       .select(`
         *,
-        review_state!inner (*),
+        review_state (*),
         notes (*)
       `)
       .eq('user_id', user.id)
-      .eq('review_state.suspended', false)
-      .lte('review_state.due_at', endOfToday.toISOString())
-      .order('review_state(due_at)', { ascending: true });
+      .in('id', problemIds);
     
     if (error) throw error;
     
-    return (data || []).map(p => ({
-      ...p,
-      review_state: p.review_state?.[0] || p.review_state,
-      notes: p.notes?.[0] || p.notes,
-    })) as ProblemWithDetails[];
+    // Map the data and sort by due_at (preserve order from first query)
+    const problemsMap = new Map(
+      (data || []).map(p => [
+        p.id,
+        {
+          ...p,
+          review_state: p.review_state?.[0] || p.review_state,
+          notes: p.notes?.[0] || p.notes,
+        } as ProblemWithDetails
+      ])
+    );
+    
+    // Return in due_at order (using the order from dueStates)
+    return dueStates
+      .map(s => problemsMap.get(s.problem_id))
+      .filter((p): p is ProblemWithDetails => p !== undefined);
   } catch (error) {
     console.error('Error fetching due today:', error);
     return [];
@@ -189,7 +214,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 /**
  * Get upcoming reviews for the next 7 days
- * Optimized: Single query with JS grouping instead of 7 separate queries
+ * "Today" includes all overdue problems (due_at <= end of today)
+ * Future days only count problems specifically due on those days
  */
 export async function getUpcomingReviews(): Promise<UpcomingReview[]> {
   try {
@@ -197,45 +223,57 @@ export async function getUpcomingReviews(): Promise<UpcomingReview[]> {
     const supabase = await createClient();
     
     const now = new Date();
-    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
     const weekEnd = endOfDay(addDays(now, 6));
     
-    // Single query to fetch all reviews due in the next 7 days
+    // Fetch all reviews due up to end of week (including overdue)
     const { data, error } = await supabase
       .from('review_state')
       .select('due_at')
       .eq('user_id', user.id)
       .eq('suspended', false)
-      .gte('due_at', todayStart.toISOString())
       .lte('due_at', weekEnd.toISOString());
     
     if (error) throw error;
     
-    // Group by day in JavaScript (fast, in-memory)
-    const countsByDay = new Map<string, number>();
+    // Count for today (includes all overdue + due today)
+    let todayCount = 0;
+    // Count for future days (only problems due on those specific days)
+    const futureCounts = new Map<string, number>();
     
-    // Initialize all 7 days with 0
-    for (let i = 0; i < 7; i++) {
+    // Initialize future days with 0
+    for (let i = 1; i < 7; i++) {
       const dayKey = format(startOfDay(addDays(now, i)), 'yyyy-MM-dd');
-      countsByDay.set(dayKey, 0);
+      futureCounts.set(dayKey, 0);
     }
     
-    // Count reviews per day
+    // Categorize reviews
     for (const item of data || []) {
-      const dayKey = format(startOfDay(new Date(item.due_at)), 'yyyy-MM-dd');
-      if (countsByDay.has(dayKey)) {
-        countsByDay.set(dayKey, (countsByDay.get(dayKey) || 0) + 1);
+      const dueDate = new Date(item.due_at);
+      
+      if (dueDate <= todayEnd) {
+        // Due today or overdue - count towards "Today"
+        todayCount++;
+      } else {
+        // Future - count towards specific day
+        const dayKey = format(startOfDay(dueDate), 'yyyy-MM-dd');
+        if (futureCounts.has(dayKey)) {
+          futureCounts.set(dayKey, (futureCounts.get(dayKey) || 0) + 1);
+        }
       }
     }
     
     // Build result array
-    const days: UpcomingReview[] = [];
-    for (let i = 0; i < 7; i++) {
+    const days: UpcomingReview[] = [
+      { date: format(startOfDay(now), 'EEE, MMM d'), count: todayCount }
+    ];
+    
+    for (let i = 1; i < 7; i++) {
       const dayStart = startOfDay(addDays(now, i));
       const dayKey = format(dayStart, 'yyyy-MM-dd');
       days.push({
         date: format(dayStart, 'EEE, MMM d'),
-        count: countsByDay.get(dayKey) || 0,
+        count: futureCounts.get(dayKey) || 0,
       });
     }
     

@@ -1,11 +1,13 @@
 import { getDashboardStats, getUpcomingReviews, getDueToday } from '@/lib/actions/reviews';
+import { getProblemsAddedToday } from '@/lib/actions/problems';
 import { DashboardContent } from '@/components/dashboard-content';
 
 export default async function DashboardPage() {
-  const [stats, upcoming, dueToday] = await Promise.all([
+  const [stats, upcoming, dueToday, addedToday] = await Promise.all([
     getDashboardStats(),
     getUpcomingReviews(),
     getDueToday(),
+    getProblemsAddedToday(),
   ]);
 
   // Serialize data for client component
@@ -20,7 +22,8 @@ export default async function DashboardPage() {
     <DashboardContent 
       stats={stats} 
       dueToday={serializedDueToday} 
-      upcoming={upcoming} 
+      upcoming={upcoming}
+      addedToday={addedToday}
     />
   );
 }

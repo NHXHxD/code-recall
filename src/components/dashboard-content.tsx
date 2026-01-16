@@ -36,13 +36,20 @@ interface UpcomingDay {
   count: number;
 }
 
+interface ProblemsAddedToday {
+  easy: number;
+  medium: number;
+  hard: number;
+}
+
 interface DashboardContentProps {
   stats: DashboardStats;
   dueToday: DueProblem[];
   upcoming: UpcomingDay[];
+  addedToday: ProblemsAddedToday;
 }
 
-export function DashboardContent({ stats, dueToday, upcoming }: DashboardContentProps) {
+export function DashboardContent({ stats, dueToday, upcoming, addedToday }: DashboardContentProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -199,7 +206,7 @@ export function DashboardContent({ stats, dueToday, upcoming }: DashboardContent
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.5 }}
           >
-            <DailyGoalCard />
+            <DailyGoalCard addedToday={addedToday} />
           </motion.div>
 
           {/* Upcoming Reviews */}

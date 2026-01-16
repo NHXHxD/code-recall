@@ -240,3 +240,40 @@ export async function toggleSuspend(problemId: string, suspended: boolean): Prom
   }
 }
 
+/**
+ * Get count of problems added today, grouped by difficulty
+ */
+export async function getProblemsAddedToday(): Promise<{ easy: number; medium: number; hard: number }> {
+  try {
+    const user = await requireUser();
+    const supabase = await createClient();
+    
+    // Get start of today in user's timezone (use UTC for server)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStart = today.toISOString();
+    
+    const { data, error } = await supabase
+      .from('problems')
+      .select('difficulty')
+      .eq('user_id', user.id)
+      .gte('created_at', todayStart);
+    
+    if (error) throw error;
+    
+    // Count by difficulty
+    const counts = { easy: 0, medium: 0, hard: 0 };
+    for (const problem of data || []) {
+      const diff = problem.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard';
+      if (diff in counts) {
+        counts[diff]++;
+      }
+    }
+    
+    return counts;
+  } catch (error) {
+    console.error('Error fetching problems added today:', error);
+    return { easy: 0, medium: 0, hard: 0 };
+  }
+}
+

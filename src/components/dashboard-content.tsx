@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/ui/stats-card';
 import { DifficultyBadge } from '@/components/ui/difficulty-badge';
+import { DailyGoalCard } from '@/components/daily-goal-card';
 import { 
   Clock, 
   Calendar, 
@@ -190,48 +191,60 @@ export function DashboardContent({ stats, dueToday, upcoming }: DashboardContent
           </Card>
         </motion.div>
 
-        {/* Upcoming Reviews */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-        >
-          <Card className="border-[var(--border)]">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Next 7 Days</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                {upcoming.map((day, index) => (
-                  <motion.div
-                    key={day.date}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.6 + index * 0.05 }}
-                    className="flex items-center justify-between rounded-md px-2 py-2.5 transition-colors hover:bg-[var(--muted)]"
-                  >
-                    <span className={`text-sm ${
-                      index === 0 
-                        ? 'font-medium text-[var(--foreground)]' 
-                        : 'text-[var(--foreground-muted)]'
-                    }`}>
-                      {index === 0 ? 'Today' : day.date}
-                    </span>
-                    <span className={`text-sm font-medium ${
-                      day.count > 0 
-                        ? index === 0 
-                          ? 'text-[var(--accent)]' 
-                          : 'text-[var(--foreground)]'
-                        : 'text-[var(--foreground-subtle)]'
-                    }`}>
-                      {day.count} {day.count === 1 ? 'review' : 'reviews'}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Right Column - Daily Goal + Upcoming Reviews */}
+        <div className="space-y-4">
+          {/* Daily Goal Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+          >
+            <DailyGoalCard />
+          </motion.div>
+
+          {/* Upcoming Reviews */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+          >
+            <Card className="border-[var(--border)]">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold">Next 7 Days</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-0.5">
+                  {upcoming.map((day, index) => (
+                    <motion.div
+                      key={day.date}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.7 + index * 0.05 }}
+                      className="flex items-center justify-between rounded-md px-2 py-2 transition-colors hover:bg-[var(--muted)]"
+                    >
+                      <span className={`text-sm ${
+                        index === 0 
+                          ? 'font-medium text-[var(--foreground)]' 
+                          : 'text-[var(--foreground-muted)]'
+                      }`}>
+                        {index === 0 ? 'Today' : day.date}
+                      </span>
+                      <span className={`text-sm font-medium ${
+                        day.count > 0 
+                          ? index === 0 
+                            ? 'text-[var(--accent)]' 
+                            : 'text-[var(--foreground)]'
+                          : 'text-[var(--foreground-subtle)]'
+                      }`}>
+                        {day.count} {day.count === 1 ? 'review' : 'reviews'}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

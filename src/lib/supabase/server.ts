@@ -7,8 +7,7 @@ import { cache } from 'react';
  */
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 
-              process.env.SUPABASE_URL ||
-              process.env.POSTGRES_SUPABASE_URL;
+              process.env.SUPABASE_URL;
   
   if (!url) {
     throw new Error('Missing Supabase URL. Set NEXT_PUBLIC_SUPABASE_URL in your environment.');

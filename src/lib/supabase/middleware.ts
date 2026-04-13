@@ -6,8 +6,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 function getSupabaseUrl(): string | undefined {
   return process.env.NEXT_PUBLIC_SUPABASE_URL || 
-         process.env.SUPABASE_URL ||
-         process.env.POSTGRES_SUPABASE_URL;
+         process.env.SUPABASE_URL;
 }
 
 /**
